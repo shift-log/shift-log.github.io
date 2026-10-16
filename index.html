@@ -32,8 +32,47 @@
 
   <title>ShiftLog</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Start fetching the app while the page is still loading. -->
+  <link rel="preload" href="main.dart.js" as="script">
+  <style>
+    /* Shown at once, until the app draws its first frame. */
+    :root { --bg: #F2F2F7; --fg: #1C1C1E; --muted: #8E8E93; --bar: #E1E1E6; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0E1014; --fg: #F2F2F7; --muted: #8E8E93; --bar: #24262B; }
+    }
+    html, body { margin: 0; height: 100%; background: var(--bg); }
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+      color: var(--fg); transition: opacity 250ms ease;
+    }
+    #splash img { width: 72px; height: 72px; border-radius: 18px; }
+    #splash .name { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
+    #splash .bar {
+      width: 120px; height: 4px; border-radius: 2px; overflow: hidden;
+      background: var(--bar); margin-top: 6px;
+    }
+    #splash .bar::after {
+      content: ""; display: block; width: 40%; height: 100%;
+      border-radius: 2px; background: var(--muted);
+      animation: slide 1.1s ease-in-out infinite;
+    }
+    @keyframes slide { from { transform: translateX(-100%); }
+                       to { transform: translateX(250%); } }
+    @media (prefers-reduced-motion: reduce) {
+      #splash .bar::after { animation: none; width: 100%; opacity: .5; }
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+  </style>
 </head>
 <body>
+  <div id="splash" aria-label="Loading ShiftLog">
+    <img src="icons/Icon-192.png" alt="">
+    <div class="name">ShiftLog</div>
+    <div class="bar"></div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

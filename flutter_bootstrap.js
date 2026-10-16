@@ -35,8 +35,14 @@ if (!window._flutter) {
 }
 _flutter.buildConfig = {"engineRevision":"77e2e94772b6eb43759e34ed1ad7da4674e19cab","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
-_flutter.loader.load({
-  serviceWorkerSettings: {
-    serviceWorkerVersion: "4080131943" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */
-  }
+
+// Hide the HTML loading screen (index.html) once the app draws its first
+// frame, so there's never a blank page while it starts.
+window.addEventListener('flutter-first-frame', function () {
+  var splash = document.getElementById('splash');
+  if (!splash) return;
+  splash.classList.add('done');
+  setTimeout(function () { splash.remove(); }, 300);
 });
+
+_flutter.loader.load();

@@ -17,7 +17,8 @@
   <base href="/">
 
   <meta charset="UTF-8">
-  <meta name="theme-color" content="#0E1014">
+  <meta name="theme-color" content="#FFFBF2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1F2A27" media="(prefers-color-scheme: dark)">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Track office hours, work-from-home days and leave.">
 
@@ -36,9 +37,10 @@
   <link rel="preload" href="main.dart.js" as="script">
   <style>
     /* Shown at once, until the app draws its first frame. */
-    :root { --bg: #F2F2F7; --fg: #1C1C1E; --muted: #8E8E93; --bar: #E1E1E6; }
+    /* Playful's paper and chalkboard: the default style for new users. */
+    :root { --bg: #FFFBF2; --fg: #1E2A3A; --muted: #FF8A3D; --bar: #F1E6D2; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #0E1014; --fg: #F2F2F7; --muted: #8E8E93; --bar: #24262B; }
+      :root { --bg: #1F2A27; --fg: #F4F1E8; --muted: #FFB27A; --bar: #33403C; }
     }
     html, body { margin: 0; height: 100%; background: var(--bg); }
     #splash {
@@ -69,7 +71,7 @@
 </head>
 <body>
   <div id="splash" aria-label="Loading ShiftLog">
-    <img src="icons/Icon-192.png" alt="">
+    <img src="data:image/webp;base64,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" alt="" width="72" height="72">
     <div class="name">ShiftLog</div>
     <div class="bar"></div>
   </div>

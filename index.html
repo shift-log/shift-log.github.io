@@ -68,6 +68,17 @@
     }
     #splash.done { opacity: 0; pointer-events: none; }
   </style>
+  <script>
+    // The app's own colours from last time (its style and light / dark),
+    // so a reload doesn't flash a different colour before the app draws.
+    try {
+      var c = JSON.parse(localStorage.getItem('shiftlog.splash') || 'null');
+      if (c) for (var k in c) {
+        if (/^#[0-9a-f]{6}$/i.test(c[k]))
+          document.documentElement.style.setProperty('--' + k, c[k]);
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <div id="splash" aria-label="Loading ShiftLog">

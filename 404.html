@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShiftLog</title>
+  <script>
+    // GitHub Pages has no rewrites, so a link like /s/<id> lands here. The
+    // app lives at /#/s/<id>; send the browser there, keeping ?comment=….
+    var p = location.pathname;
+    if (/^\/s\/[A-Za-z0-9_-]{6,64}\/?$/.test(p)) {
+      location.replace('/#' + p.replace(/\/$/, '') + location.search);
+    } else {
+      location.replace('/');
+    }
+  </script>
+</head>
+<body></body>
+</html>

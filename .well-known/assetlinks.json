@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "tech.innospace.shiftlog",
+      "sha256_cert_fingerprints": [
+        "83:05:B9:89:54:BD:66:F4:DC:29:D4:73:E5:04:50:C0:29:DD:52:A2:B4:E2:66:A4:E6:38:2D:17:E2:F1:08:C2"
+      ]
+    }
+  }
+]

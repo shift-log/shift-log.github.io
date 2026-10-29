@@ -70,6 +70,16 @@
     #splash.done { opacity: 0; pointer-events: none; }
   </style>
   <script>
+    // A shared-note link (/s/<id>, as opened from a chat) goes to the app's
+    // own address, /#/s/<id>. GitHub Pages does this in 404.html; this covers
+    // hosts that answer every path with this page.
+    (function () {
+      var p = location.pathname;
+      if (/^\/s\/[A-Za-z0-9_-]{6,64}\/?$/.test(p))
+        location.replace('/#' + p.replace(/\/$/, '') + location.search);
+    })();
+  </script>
+  <script>
     // The app's own colours from last time (its style and light / dark),
     // so a reload doesn't flash a different colour before the app draws.
     try {

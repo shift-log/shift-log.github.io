@@ -36,13 +36,37 @@ if (!window._flutter) {
 _flutter.buildConfig = {"engineRevision":"77e2e94772b6eb43759e34ed1ad7da4674e19cab","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
 
+// The graphics engine is the biggest download after the app itself, and the
+// loader asks for it only once it has got going. Ask now (Chromium browsers
+// only: others use another build of it). The page's other early requests are
+// in index.html.
+(function () {
+  var rev = (_flutter.buildConfig || {}).engineRevision;
+  var chromium = window.Intl && Intl.v8BreakIterator && Intl.Segmenter;
+  if (!rev || !chromium) return;
+  var link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'fetch';
+  link.crossOrigin = 'anonymous';
+  link.href = 'https://www.gstatic.com/flutter-canvaskit/' + rev +
+      '/chromium/canvaskit.wasm';
+  document.head.appendChild(link);
+})();
+
 // Hide the HTML loading screen (index.html) once the app draws its first
-// frame, so there's never a blank page while it starts.
+// frame, so there's never a blank page while it starts. A greeting shown
+// there stays as long as the app's own would (1.9 s), even when the app is
+// ready sooner.
 window.addEventListener('flutter-first-frame', function () {
   var splash = document.getElementById('splash');
   if (!splash) return;
-  splash.classList.add('done');
-  setTimeout(function () { splash.remove(); }, 300);
+  var wait = window.__greetedAt
+      ? Math.max(0, window.__greetedAt + 1900 - performance.now())
+      : 0;
+  // Both timers start now: the app's first frame is followed by a long task,
+  // and a fade timer started after it would add its 300 ms on top.
+  setTimeout(function () { splash.classList.add('done'); }, wait);
+  setTimeout(function () { splash.remove(); }, wait + 300);
 });
 
 _flutter.loader.load();

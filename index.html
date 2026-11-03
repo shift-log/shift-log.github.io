@@ -36,6 +36,18 @@
   <link rel="manifest" href="manifest.json">
   <!-- Start fetching the app while the page is still loading. -->
   <link rel="preload" href="main.dart.js" as="script">
+  <!--
+    What the app asks for a moment after it starts, fetched now instead (low
+    priority, so the app itself keeps the bandwidth): the cloud-sync library.
+    firebase_core_web loads it with import(), which picks these up. The
+    Firebase version must stay the one firebase_core_web is pinned to;
+    test/web_shell_test.dart checks it. sqlite3.wasm is deliberately not
+    here: a worker fetches it, a preload costs a first visit 0.3 s at 10 Mbps.
+  -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js" fetchpriority="low">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js" fetchpriority="low">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore-pipelines.js" fetchpriority="low">
   <style>
     /* Shown at once, until the app draws its first frame. */
     /* Playful's paper and chalkboard: the default style for new users. */
@@ -50,6 +62,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, sans-serif;
       color: var(--fg); transition: opacity 250ms ease;
+      /* Above the app while it fades out, so a greeting can be held. */
+      z-index: 10;
     }
     #splash img { width: 72px; height: 72px; border-radius: 18px; }
     #splash .name { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
@@ -68,6 +82,31 @@
       #splash .bar::after { animation: none; width: 100%; opacity: .5; }
     }
     #splash.done { opacity: 0; pointer-events: none; }
+
+    /* The greeting a returning user sees at once (the app's own, drawn here:
+       same colours, same motion, same 24px text). */
+    #splash .greet { display: none; flex-direction: column; align-items: center; gap: 24px; }
+    #splash.greeting > :not(.greet) { display: none; }
+    #splash.greeting .greet { display: flex; }
+    .greet svg { display: none; width: 132px; height: 132px; overflow: visible; }
+    #splash[data-part="morning"] .morning,
+    #splash[data-part="afternoon"] .afternoon,
+    #splash[data-part="evening"] .evening { display: block; }
+    .greet .text {
+      font-size: 24px; font-weight: 800; letter-spacing: -0.4px;
+      text-align: center; padding: 0 24px;
+      animation: rise 800ms cubic-bezier(.215, .61, .355, 1) both;
+    }
+    .greet .rise { animation: sunrise 2.6s cubic-bezier(.215, .61, .355, 1) both; }
+    .greet .spin { transform-origin: 66px 66px; animation: spin 2.6s linear infinite; }
+    .greet .star { animation: twinkle 2.6s ease-in-out infinite; }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes sunrise { from { transform: translateY(39.6px); } to { transform: none; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes twinkle { 0%, 100% { opacity: .675; } 25% { opacity: 1; } 75% { opacity: .35; } }
+    @media (prefers-reduced-motion: reduce) {
+      .greet .text, .greet .rise, .greet .spin, .greet .star { animation: none; }
+    }
   </style>
   <script>
     // A shared-note link (/s/<id>, as opened from a chat) goes to the app's
@@ -96,7 +135,58 @@
     <img src="data:image/webp;base64,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" alt="" width="72" height="72">
     <div class="name">ShiftLog</div>
     <div class="bar"></div>
+    <div class="greet" aria-live="polite">
+      <!-- Morning: a sun rising over a horizon. -->
+      <svg class="morning" viewBox="0 0 132 132" aria-hidden="true" style="color:#F59E0B">
+        <defs><radialGradient id="g-morning"><stop offset="0" stop-color="currentColor" stop-opacity=".35"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs>
+        <g class="rise"><circle cx="66" cy="63.4" r="54" fill="url(#g-morning)"/><circle cx="66" cy="63.4" r="26" fill="currentColor"/></g>
+        <path d="M15.84 105.6H116.16" stroke="currentColor" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <!-- Afternoon: a sun with slowly turning rays. -->
+      <svg class="afternoon" viewBox="0 0 132 132" aria-hidden="true" style="color:#FBBF24">
+        <defs><radialGradient id="g-afternoon"><stop offset="0" stop-color="currentColor" stop-opacity=".35"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs>
+        <circle cx="66" cy="66" r="56" fill="url(#g-afternoon)"/>
+        <path class="spin" d="M96 66h14M87.2 87.2l9.9 9.9M66 96v14M44.8 87.2l-9.9 9.9M36 66h-14M44.8 44.8l-9.9-9.9M66 36v-14M87.2 44.8l9.9-9.9" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="66" cy="66" r="20" fill="currentColor"/>
+      </svg>
+      <!-- Evening: a crescent moon with twinkling stars. -->
+      <svg class="evening" viewBox="0 0 132 132" aria-hidden="true" style="color:#818CF8">
+        <defs>
+          <radialGradient id="g-evening"><stop offset="0" stop-color="currentColor" stop-opacity=".35"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
+          <mask id="m-evening"><rect width="132" height="132" fill="#fff"/><circle cx="77" cy="59" r="22"/></mask>
+        </defs>
+        <circle cx="66" cy="66" r="52" fill="url(#g-evening)"/>
+        <circle cx="66" cy="66" r="24" fill="currentColor" mask="url(#m-evening)"/>
+        <circle class="star" cx="28" cy="38" r="2.6" fill="currentColor"/>
+        <circle class="star" cx="100" cy="96" r="2.6" fill="currentColor" style="animation-delay:-.87s"/>
+        <circle class="star" cx="106" cy="32" r="2.6" fill="currentColor" style="animation-delay:-1.74s"/>
+      </svg>
+      <div class="text"></div>
+    </div>
   </div>
+  <script>
+    // Someone who has set the app up sees its greeting at once, as the app
+    // does, instead of a loading screen and then the greeting. The app saves
+    // its colours and the name for this (see rememberSplashColors) and, on
+    // seeing the class below, goes straight to Home when it is ready.
+    // Only on a plain launch: a reload on a page (#/notes) shows no greeting.
+    (function () {
+      try {
+        var hash = location.hash;
+        if (hash && hash !== '#' && hash !== '#/') return;
+        var saved = JSON.parse(localStorage.getItem('shiftlog.splash') || 'null');
+        if (!saved || typeof saved.greet !== 'string') return;
+        var hour = new Date().getHours();
+        var part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+        var splash = document.getElementById('splash');
+        splash.querySelector('.greet .text').textContent =
+          'Good ' + part + (saved.greet ? ', ' + saved.greet : '');
+        splash.setAttribute('data-part', part);
+        splash.classList.add('greeting');
+        window.__greetedAt = performance.now(); // flutter_bootstrap.js holds it
+      } catch (e) {}
+    })();
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
